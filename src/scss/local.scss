@@ -1,0 +1,96 @@
+@import 'harmoware-vis/scss/harmoware.scss';
+
+div.harmovis_controller {
+  @extend .harmovis_controller;
+  padding: 10px 0px 10px 0px;
+  background-color:rgba(0,0,0,0.5);
+  width: 300px;
+  ul {
+    list-style-type: none; 
+    padding: 0px; 
+    margin: 0px; 
+    li.flex_row {
+      padding: 5px 0px; 
+      display: flex;
+      flex-direction: row;
+    }
+    li.flex_column {
+      @extend .flex_row;
+      flex-direction: column;
+    }
+  }
+  ol {
+    padding-inline-start: 0px;
+    padding-inline-end: 0px;
+  }
+  li.none_display {
+    width: 0%;  
+    display: none;
+  }
+  button.harmovis_button {
+    width: 100%;  
+  }
+  button.size_button {
+    width: 100%;  
+    font-size: 10px; 
+    padding: 3px 6px;
+    width: auto;  
+  }
+  select.local_select {
+    background: #808080;
+    border-radius: 2px;
+    color: #FFFFFF;
+    cursor: pointer;
+    font-size: 12px;
+    letter-spacing: .026em;
+    line-height: 14px;
+    padding: 3px 12px;
+    text-align: center;
+    vertical-align: middle;
+    width: 100%;
+    border-width: 0px;
+    box-shadow: 1px 1px 1px #555;
+    transition: all .2s ease;
+    &:hover {
+      background: #A0A0A0;
+    }
+  }
+}
+div.harmovis_footer {
+  @extend .harmovis_footer;
+  left: 100px;
+}
+div.imagecanvas {
+  width: 100%; 
+  height: 100vh; 
+}
+.click-and-move {
+  cursor: pointer ;
+  position: absolute;
+  z-index: 1000;
+}
+.drag {
+  z-index: 1001;
+}
+.rotate {
+  z-index: 1001;
+}
+.select {
+  z-index: 1001;
+  filter: sepia(0.75);
+}
+div.refArea {
+  visibility:hidden
+}
+img.img_handler{
+  position:static
+}
+canvas.canvas_handler{
+  position:static
+}
+div.panel {
+  margin: 5px 0px;
+}
+div.videoArea {
+  visibility:visible;
+}
