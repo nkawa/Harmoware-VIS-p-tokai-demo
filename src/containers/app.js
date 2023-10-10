@@ -15,7 +15,7 @@ const INITIAL_VIEW_STATE = {
   target: [0, 0, 0],
   rotationX: 90,
   rotationOrbit: 0,
-  zoom: 4.0
+  zoom: 3.0
 };
 
 const App = (props)=>{
@@ -32,6 +32,8 @@ const App = (props)=>{
   const [vShiftX, setVShiftX] = React.useState(0)
   const [vShiftY, setVShiftY] = React.useState(0)
   const [videoUrl, setVideoUrl] = React.useState(undefined)
+
+  const [pathData, setPathData] = React.useState([])
 
   const [state,setState] = useState({ popup: [0, 0, ''] })
   const [viewState, updateViewState] = useState(INITIAL_VIEW_STATE);
@@ -53,7 +55,7 @@ const App = (props)=>{
   const [imgLock, setImgLock] = useState([])
   const [imgOpacity, setImgOpacity] = React.useState([])
 
-  const { actions, viewport, loading, settime, timeLength, ExtractedData:movedData } = props;
+  const { actions, viewport, loading, settime, timeLength, ExtractedData:movedData, movesbase } = props;
 
   React.useEffect(()=>{
     setTimeout(()=>{InitialFileRead({actions, configLoad})},1000)
@@ -353,8 +355,12 @@ const App = (props)=>{
   React.useEffect(()=>{
     window.onkeydown = (e)=>{
       if(e.isTrusted === true && e.altKey === false && e.code === "KeyH" && e.ctrlKey === false &&
-        e.key === "h" && e.keyCode === 72 && e.repeat === false && e.shiftKey === false && e.type === "keydown"){
+        e.key === "h" && e.repeat === false && e.shiftKey === false && e.type === "keydown"){
         App.panel = !App.panel
+      }
+      if(e.isTrusted === true && e.altKey === false && e.code === "KeyL" && e.ctrlKey === false &&
+        e.key === "l" && e.repeat === false && e.shiftKey === false && e.type === "keydown"){
+          App.pathDisp = !App.pathDisp
       }
     }
   },[])
@@ -396,9 +402,7 @@ const App = (props)=>{
           const color = iconGradation ? 
             sourceColor.map((sourceCol,idx)=>(sourceCol+rate*(targetColor[idx]-sourceCol))|0) : sourceColor;
           movedData.push(Object.assign({}, otherProps1, otherProps2,
-            { settime,
-              position, sourcePosition, targetPosition, boxWidth, boxHeight,
-              color, direction, sourceColor, targetColor, movesbaseidx},
+            { nextidx, position, boxWidth, boxHeight, color, movesbaseidx},
           ));
         }
       }
@@ -407,8 +411,53 @@ const App = (props)=>{
     return [...movedData]
   }
 
+  React.useEffect(()=>{
+    if(App.pathDisp && movedData !== undefined && movedData.length > 0){
+      const pathData = movedData.reduce((pathData,movedData)=>{
+        const {movesbaseidx,nextidx} = movedData
+        const {operation} = movesbase[movesbaseidx]
+        for(let i=0; i<nextidx; i=i+1){
+          const lineData = {}
+          lineData.sourcePosition = operation[i].position
+          if(i < (nextidx-1)){
+            lineData.targetPosition = operation[i+1].position
+          }else{
+            lineData.targetPosition = movedData.position
+          }
+          const {color=[0, 255, 0],lineWidth=1} = operation[i]
+          lineData.color = color
+          lineData.lineWidth = lineWidth
+          pathData.push(lineData)
+        }
+        return pathData
+      },[])
+      setPathData(pathData)
+    }
+  },[App.pathDisp,movedData])
+
+  React.useEffect(()=>{
+    if(!App.pathDisp){
+      setPathData([])
+    }
+  },[App.pathDisp])
+
+  const getRootLayers = ()=>{
+    if(App.pathDisp && pathData.length > 0){
+      return new LineLayer({
+        id: `RootLayer`,
+        data: pathData,
+        coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
+        widthUnits:'common',
+        getColor: (x)=>x.color,
+        getWidth: (x)=>x.lineWidth,
+      })
+    }
+    return null
+  }
+
   const getPath = (x)=>{
-    const {position:pos=[0,0,0],boxWidth:wd=5,boxHeight:ht=5} = x
+    const {position:centerpos=[0,0,0],boxWidth:wd=5,boxHeight:ht=5} = x
+    const pos  = [centerpos[0]-(wd/2),centerpos[1]+(ht/2),centerpos[2]]
     return [pos,[pos[0]+wd,pos[1],pos[2]],[pos[0]+wd,pos[1]-ht,pos[2]],[pos[0],pos[1]-ht,pos[2]],pos]
   }
 
@@ -421,6 +470,8 @@ const App = (props)=>{
         getPath,
         getColor: (x)=>x.color || [0,255,0,255],
         getWidth: (x)=>x.lineWidth || 1,
+        pickable: true,
+        onHover,
       })
     }
     return null
@@ -546,6 +597,23 @@ const App = (props)=>{
     })
   }
 
+  const arrStrConv = (value)=>Array.isArray(value)?`[${value.map(el=>arrStrConv(el))}]`:value.toString()
+
+  const onHover = (el)=>{
+    if (el && el.object) {
+      let disptext = '';
+      const objctlist = Object.entries(el.object);
+      for (let i = 0, lengthi = objctlist.length; i < lengthi; i=(i+1)|0) {
+        const strvalue = arrStrConv(objctlist[i][1]);
+        disptext = disptext + (i > 0 ? '\n' : '');
+        disptext = disptext + (`${objctlist[i][0]}: ${strvalue}`);
+      }
+      setState({ ...state, popup: [el.x, el.y, disptext] });
+    } else {
+      setState({ ...state, popup: [0, 0, ''] });
+    }
+  }
+
   const onClick = (el)=>{
     if (el && el.layer) {
       //console.log(`el:${el}`)
@@ -604,6 +672,7 @@ const App = (props)=>{
           layers={[
               getVideoLayers(),
               getLayers(),
+              getRootLayers(),
               getFrameLayers(),
           ]}
       />
@@ -618,11 +687,11 @@ const App = (props)=>{
         zoom:{viewState.zoom}&nbsp;
       </div>
       <svg width={viewport.width} height={viewport.height} className="harmovis_overlay">
-        <g fill="white" fontSize="12">
+        <g fill="white" fontSize="15">
           {state.popup[2].length > 0 ?
             state.popup[2].split('\n').map((value, index) =>
               <text
-                x={state.popup[0] + 10} y={state.popup[1] + (index * 12)}
+                x={state.popup[0] + 10} y={state.popup[1] + (index * 15)}
                 key={index.toString()}
               >{value}</text>) : null
           }
@@ -636,6 +705,7 @@ const App = (props)=>{
 App.timeoutID = undefined
 App.timeoutID2 = undefined
 App.panel = true
+App.pathDisp = true
 
 export default connectToHarmowareVis(App);
 

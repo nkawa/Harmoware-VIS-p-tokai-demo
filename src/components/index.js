@@ -26,7 +26,7 @@ export default class Controller extends React.Component {
           target: [0, 0, 0],
           rotationX: 90,
           rotationOrbit: 0,
-          zoom: 4.0,
+          zoom: 3.0,
           transitionDuration: 200,
         })
         break
@@ -114,7 +114,8 @@ export default class Controller extends React.Component {
     return (
         <div className="harmovis_controller" ref={this.divRef} >
             <ul className="flex_list">
-            <li className="flex_row">背景動画</li>
+            <li className="flex_row">「H」キーでパネル消去</li>
+            <li className="flex_row">「L」キーで経路消去</li>
             <VideoInput videoUrl={videoUrl} setVideoUrl={setVideoUrl}/>
             <li className="flex_row">
               <button onClick={videoplay} className='harmovis_button'>PLAY</button>
