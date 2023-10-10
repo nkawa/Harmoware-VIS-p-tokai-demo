@@ -407,11 +407,11 @@ const SizeController = (props)=>{
     <li className="flex_row">
       <label htmlFor="size">{`size :`}</label>
       <input type="range" value={size3d[imgIdIdx]}
-        min={0} max={100} step={0.05}
+        min={0} max={1000} step={0.05}
         onChange={setSize3d}
         className="harmovis_input_range" id="size" />:
       <input type="number" value={size3d[imgIdIdx]}
-        min={0} max={100} step={0.05}
+        min={0} max={1000} step={0.05}
         onChange={setSize3d}
         className="harmovis_input_number" id="size" />
     </li>
