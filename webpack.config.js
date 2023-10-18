@@ -1,8 +1,10 @@
 const resolve = require('path').resolve;
+var path = require('path');
+
 module.exports = {
   output: {
-    path: __dirname,
-    filename: 'bundle.js'
+    path: path.join(__dirname,'public'),
+    filename: '[name].js'
   },
   devtool: 'source-map',
   module: {
@@ -15,5 +17,12 @@ module.exports = {
       test: /\.scss$/,
       use: ["style-loader", "css-loader", "sass-loader"]
     }]
+  },
+  entry:{
+    bundle: './src/index.js',
+    worker: './worker.js'
+  },
+  devServer: {
+    contentBase: path.join(__dirname, 'public')
   }
 };

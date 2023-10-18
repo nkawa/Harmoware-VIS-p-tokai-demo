@@ -77,6 +77,12 @@ export default class Controller extends React.Component {
     this.props.videoSetTime(setTime)
   }
 
+  videoSetSpeed(e){
+    const setSpeed = +e.target.value
+    this.props.videoSetSpeed(setSpeed)
+  }
+
+
   allPositionController(buttonType){
     const wkpos3d = [...this.props.pos3d]
     for(let i=0; i<wkpos3d.length; i=i+1){
@@ -108,7 +114,7 @@ export default class Controller extends React.Component {
   }
 
   render() {
-    const {setImgList, getOutputData, imgIdIdx, srclist, viewState, settime, timeLength, configLoad,
+    const {setImgList, getOutputData, imgIdIdx, srclist, viewState, settime, timeLength, configLoad, videospeed,
       videoplay, videopause, videorestart, vSzRate, vShiftX, vShiftY, videoUrl, setVideoUrl, actions, inputFileName } = this.props
     const { movesFileName } = inputFileName;
     return (
@@ -155,12 +161,20 @@ export default class Controller extends React.Component {
             <li className="flex_row"></li>
             <li className="flex_row">
               <label htmlFor="currentTime">{`currentTime:`}</label>
-              <input type="range" value={settime} min={0} max={timeLength} step={1} onChange={this.videoSetTime.bind(this)}
+              <input type="range" value={settime} min={0} max={timeLength} step={0.2} onChange={this.videoSetTime.bind(this)}
                 className="harmovis_input_range" id="currentTime" />
             </li>
             <li className="flex_row">
-              <input type="number" value={settime} min={0} max={timeLength} step={1} onChange={this.videoSetTime.bind(this)}
+              <input type="number" value={settime} min={0} max={timeLength} step={0.2} onChange={this.videoSetTime.bind(this)}
                 className="harmovis_input_number" id="currentTime" />{` / ${timeLength}`}
+            </li>
+            <li className="flex_row">
+              <label htmlFor="speed">{`speed:`}</label>
+              <input type="range" value={videospeed} min={0.1} max={5} step={0.1} onChange={this.videoSetSpeed.bind(this)}
+                className="harmovis_input_range" id="speed" />
+              <input type="number" value={videospeed} min={0.1} max={5} step={0.1} onChange={this.videoSetSpeed.bind(this)}
+                className="harmovis_input_number" id="speed" />
+               
             </li>
 
             <li className="flex_row"></li>

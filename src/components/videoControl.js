@@ -13,6 +13,7 @@ export default class VideoController extends React.Component {
             if(this.player === undefined){
                 this.player = new Plyr(this.videoRef.current,{controls:[]});
                 this.player.speed = 1
+                this.player.loop = true;
             }
         }
     }
@@ -21,11 +22,13 @@ export default class VideoController extends React.Component {
             if(this.player === undefined){
                 this.player = new Plyr(this.videoRef.current,{controls:[]});
                 this.player.speed = 1
+                this.player.loop = true;
             }
         }
         if(prevProps.videoUrl !== this.props.videoUrl){
             if(this.player !== undefined && this.props.videoUrl){
                 this.player.source = this.props.videoUrl
+                this.player.loop = true;
                 this.player.restart()
             }
         }

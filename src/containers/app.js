@@ -54,6 +54,7 @@ const App = (props)=>{
   const [z_order, setzOrder] = useState([])
   const [imgLock, setImgLock] = useState([])
   const [imgOpacity, setImgOpacity] = React.useState([])
+  const [videospeed, setVideoSpeed] = useState(1)
 
   const { actions, viewport, loading, settime, timeLength, ExtractedData:movedData, movesbase } = props;
 
@@ -585,6 +586,15 @@ const App = (props)=>{
     }
   }
 
+  const videoSetSpeed = (setSpeed)=>{
+    if(videoUrl){
+      if(videoRef.current && videoRef.current.player){
+        setVideoSpeed(setSpeed);
+        videoRef.current.player.speed = setSpeed
+      }
+    }
+  }
+
   const getImgCanvas = ()=>{
     return imglist.map((element,idx)=>{
       const {width,height} = imgSize[idx] !== undefined ? imgSize[idx] : {width:0,height:0}
@@ -657,6 +667,7 @@ const App = (props)=>{
         imgOpacity={imgOpacity} setImgOpacity={setImgOpacity} imgLock={imgLock} setImgLock={setImgLock}
         imgdispMode={imgdispMode} setImgdispMode={setImgdispMode} panel={App.panel} configLoad={configLoad}
         videoplay={videoplay} videopause={videopause} videorestart={videorestart} videoSetTime={videoSetTime}
+        videoSetSpeed={videoSetSpeed} videospeed={videospeed}
         vSzRate={vSzRate} setVSzRate={setVSzRate} videoUrl={videoUrl} setVideoUrl={setVideoUrl}
         vShiftX={vShiftX} setVShiftX={setVShiftX} vShiftY={vShiftY} setVShiftY={setVShiftY} />
       <div className="harmovis_area">
