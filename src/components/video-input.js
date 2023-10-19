@@ -25,6 +25,7 @@ export const VideoInput = (props)=>{
         const videoUrl = inputRef.current.value
         const result = (videoUrl !== "") ///^https?:\/\/[\w!?/+\-_~;.,*&@#$%()'[\]]+/.test(videoUrl)
         setUrlCheck(result)
+        console.log("SetURL:",result, videoUrl);
         if(result){
             setVideoUrl(videoUrl);
         }else{

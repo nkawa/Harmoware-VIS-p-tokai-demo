@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import DeckGL from '@deck.gl/react';
-import { LineLayer, PathLayer, COORDINATE_SYSTEM, OrbitView, BitmapLayer } from 'deck.gl';
+import { LineLayer, PathLayer, COORDINATE_SYSTEM, OrbitView, BitmapLayer, SimpleMeshLayer } from 'deck.gl';
 import {
-  Container, connectToHarmowareVis, LoadingIcon, FpsDisplay
+  Container, connectToHarmowareVis, LoadingIcon, FpsDisplay ,DepotsLayer
 } from 'harmoware-vis';
 import Controller from '../components';
 import VideoController from '../components/videoControl'
@@ -56,7 +56,77 @@ const App = (props)=>{
   const [imgOpacity, setImgOpacity] = React.useState([])
   const [videospeed, setVideoSpeed] = useState(1)
 
-  const { actions, viewport, loading, settime, timeLength, ExtractedData:movedData, movesbase } = props;
+  const { actions, viewport, loading, settime, timeLength, ExtractedData:movedData, movesbase, depotsData } = props;
+
+
+  
+  const videoplay = ()=>{
+    if(videoUrl){
+      if(videoRef.current && videoRef.current.player){
+        videoRef.current.player.play()
+      }
+    }else
+    if(timeLength > 0){
+      actions.setAnimatePause(false);
+    }
+  }
+  const videopause = ()=>{
+    if(videoUrl){
+      if(videoRef.current && videoRef.current.player){
+        videoRef.current.player.pause()
+      }
+    }else
+    if(timeLength > 0){
+      actions.setAnimatePause(true);
+    }
+  }
+  const videorestart = ()=>{
+    if(videoUrl){
+      if(videoRef.current && videoRef.current.player){
+        videoRef.current.player.restart()
+      }
+    }else
+    if(timeLength > 0){
+      actions.setTime(0)
+      actions.setAnimatePause(false);
+    }
+  }
+  React.useEffect(()=>{
+    const worker = new Worker("worker.js");
+    worker.addEventListener("message",(e)=>{
+      console.log("from Worker",e);
+      // ここでメッセージを解釈する
+      const cmd = e.data.substring(0,3);
+      const msg = e.data.substr(4);
+      console.log(msg);
+      const js = JSON.parse(msg);
+      switch(cmd){
+        case 'FLR':
+          console.log("floor",js)
+          if (js.control.value=="start"){
+            console.log("VideoPlay!",videoUrl);
+            videoplay();
+          }else if (js.control.value =="stop"){
+              videopause();
+              console.log("VideoPause!");
+          }
+          break;
+        case 'PLT':// click x, y
+          console.log("depo X,Y:",js.x,js.y);
+          if (js.x >=0 && js.y >=0 && js.x <= 640 && js.y <512){
+            actions.setDepotsBase([
+              // -50,-40 に変換
+              {position:[js.x*100/640-50,40-js.y*80/512,0],color:[0,255,0]}
+            ])
+          }else{
+            actions.setDepotsBase([])
+          }
+          break;
+      }
+    });
+  
+  },[videoUrl]);
+    
 
   React.useEffect(()=>{
     setTimeout(()=>{InitialFileRead({actions, configLoad})},1000)
@@ -477,6 +547,23 @@ const App = (props)=>{
     }
     return null
   }
+  const getDepotLayers = ()=>{
+    if(depotsData.length > 0){
+      return  new DepotsLayer(
+      {
+        depotsData,
+      optionVisible: state.depotOptionVisible,
+      optionChange: state.optionChange,
+      iconChange: state.iconChange,
+      getRadius: (i)=>1,
+      onHover,
+      sizeScale: 1,
+      wireframe: true,
+      })
+    }
+    
+    return null
+  }
 
   const getLayers = ()=>{
     if(dispStart2){
@@ -544,37 +631,6 @@ const App = (props)=>{
     }
   },[videoUrl])
 
-  const videoplay = ()=>{
-    if(videoUrl){
-      if(videoRef.current && videoRef.current.player){
-        videoRef.current.player.play()
-      }
-    }else
-    if(timeLength > 0){
-      actions.setAnimatePause(false);
-    }
-  }
-  const videopause = ()=>{
-    if(videoUrl){
-      if(videoRef.current && videoRef.current.player){
-        videoRef.current.player.pause()
-      }
-    }else
-    if(timeLength > 0){
-      actions.setAnimatePause(true);
-    }
-  }
-  const videorestart = ()=>{
-    if(videoUrl){
-      if(videoRef.current && videoRef.current.player){
-        videoRef.current.player.restart()
-      }
-    }else
-    if(timeLength > 0){
-      actions.setTime(0)
-      actions.setAnimatePause(false);
-    }
-  }
   const videoSetTime = (setTime)=>{
     if(videoUrl){
       if(videoRef.current && videoRef.current.player){
@@ -685,6 +741,7 @@ const App = (props)=>{
               getLayers(),
               getRootLayers(),
               getFrameLayers(),
+              getDepotLayers(),
           ]}
       />
       </div>

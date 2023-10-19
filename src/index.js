@@ -1,5 +1,5 @@
 import { render } from 'react-dom';
-import { getConfigureStore,connectToHarmowareVis } from 'harmoware-vis';
+import { getConfigureStore,connectToHarmowareVis ,getCombinedReducer} from 'harmoware-vis';
 
 import { Provider } from 'react-redux';
 import React from 'react';
@@ -17,9 +17,8 @@ import './scss/local.scss';
 //#var mqtt = new MqttWorker('../bower_components/mqtt-worker/mqttWorker.js');
 //console.log("MQTT init done");
 
-var worker = new Worker("worker.js");
-worker.postMessage("Hello");
-console.log("Run worker");
+//worker.postMessage("Hello");
+//console.log("Run worker");
 
 const store = getConfigureStore();
 
@@ -30,7 +29,3 @@ render(
   document.getElementById('app')
 );
 
-worker.addEventListener("message",(e)=>{
-  console.log("from Worker",e);
-
-})
