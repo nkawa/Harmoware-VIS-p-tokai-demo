@@ -56,6 +56,7 @@ const App = (props)=>{
   const [imgOpacity, setImgOpacity] = React.useState([])
   const [videospeed, setVideoSpeed] = useState(1)
   const [demoMode, setDemoMode] = useState(0)
+  var worker = undefined;
 
   const { actions, viewport, loading, settime, timeLength, ExtractedData:movedData, movesbase, depotsData } = props;
 
@@ -122,66 +123,69 @@ const App = (props)=>{
 
 
   React.useEffect(()=>{
-    const worker = new Worker("worker.js");
-    worker.addEventListener("message",(e)=>{
-      console.log("from Worker",e);
-      // ここでメッセージを解釈する
-      const cmd = e.data.substring(0,3);
-      const msg = e.data.substr(4);
-      console.log(msg);
-      const js = JSON.parse(msg);
-      switch(cmd){
-        case 'FLR':
-          console.log("floor",js)
-          if (js.control.value=="start"){
-            console.log("VideoPlay!",videoUrl);
-              videoplay();
-          }else if (js.control.value =="stop"){
-              videopause();
-              console.log("VideoPause!");
-          }else if (js.control.value =="mode"){
-            // モードは何種類？
-            // 0. ビデオ＋Moves 稼働 
-            // 1. ビデオのみ
-            // 2. 空白のみ
-            // 2. 空白のみ+Moves稼働
-            const nextMode = (demoMode +1)%3
-            setDemoMode(nextMode)
-            console.log("Mode Change",nextMode);
-            switch(nextMode){           // 2. 空白のみ
-              case 0:
-                setVideoUrl("data/sample.mp4");
-//                setMovesBase([]);
-                // 
-                break;
-              case 1:
-                setVideoUrl("data/2023-07-11-noobject.mp4");
-  //              setMovesLoad("data/movesbase.json");
-                break;
-              case 2:
-                setVideoUrl("data/2023-07-13_070200-070930.mp4");
-//                setMovesBase([]);
-                break;
-              case 3:
-//                setMovesLoad("data/movesbase.json");
-                break;
+    if (worker == undefined){
+      worker = new Worker("worker.js");
+      worker.addEventListener("message",(e)=>{
+        console.log("from Worker",e);
+        // ここでメッセージを解釈する
+        const cmd = e.data.substring(0,3);
+        const msg = e.data.substr(4);
+        console.log(msg);
+        const js = JSON.parse(msg);
+        switch(cmd){
+          case 'FLR':
+            console.log("floor",js)
+            if (js.control.value=="start"){
+              console.log("VideoPlay!",videoUrl);
+                videoplay();
+            }else if (js.control.value =="stop"){
+                videopause();
+                console.log("VideoPause!");
+            }else if (js.control.value =="mode"){
+              // モードは何種類？
+              // 0. ビデオ＋Moves 稼働 
+              // 1. ビデオのみ
+              // 2. 空白のみ
+              // 2. 空白のみ+Moves稼働
+              const nextMode = (demoMode +1)%3
+              setDemoMode(nextMode)
+              console.log("Mode Change",nextMode);
+              switch(nextMode){           // 2. 空白のみ
+                case 0:
+                  setVideoUrl("data/sample.mp4");
+  //                setMovesBase([]);
+                  // 
+                  break;
+                case 1:
+                  setVideoUrl("data/2023-07-11-noobject.mp4");
+    //              setMovesLoad("data/movesbase.json");
+                  break;
+                case 2:
+                  setVideoUrl("data/2023-07-13_070200-070930.mp4");
+  //                setMovesBase([]);
+                  break;
+                case 3:
+  //                setMovesLoad("data/movesbase.json");
+                  break;
+              }
             }
-          }
-          break;
-        case 'PLT':// click x, y
-          console.log("depo X,Y:",js.x,js.y);
-          if (js.x >=0 && js.y >=0 && js.x <= 640 && js.y <512){
-            actions.setDepotsBase([
-              // -50,-40 に変換
-              {position:[js.x*100/640-50,40-js.y*80/512,0],color:[0,255,0]}
-            ])
-          }else{
-            actions.setDepotsBase([])
-          }
-          break;
-      }
-    });
-  
+            break;
+          case 'PLT':// click x, y
+            console.log("depo X,Y:",js.x,js.y);
+            if (js.x >=0 && js.y >=0 && js.x <= 640 && js.y <512){
+              actions.setDepotsBase([
+                // -50,-40 に変換
+                {position:[js.x*100/640-50,40-js.y*80/512,0],color:[0,255,0]}
+              ])
+            }else{
+              actions.setDepotsBase([])
+            }
+            break;
+        }
+      });
+    
+    }
+   
   },[videoUrl,demoMode]);
     
 
@@ -516,6 +520,9 @@ const App = (props)=>{
           movedData.push(Object.assign({},
             otherProps1, otherProps2, { settime, movesbaseidx },
           ));
+          // ここで、MQTT メッセージ？
+          console.log("extract",worker,idx);
+
         }else{
           const { elapsedtime, position:sourcePosition,
             boxWidth:sourceBoxWidth=5, boxHeight:sourceBoxHeight=5,
@@ -527,6 +534,10 @@ const App = (props)=>{
           const position = sourcePosition.map((sourcePos,idx)=>sourcePos-(sourcePos-targetPosition[idx])*rate)
           const boxWidth = sourceBoxWidth-(sourceBoxWidth-targetBoxWidth)*rate
           const boxHeight = sourceBoxHeight-(sourceBoxHeight-targetBoxHeight)*rate
+//          console.log("extract2",worker,idx);
+          if (worker != undefined){
+            worker.postMessage(idx+","+settime+","+movesbaseidx);
+          }
           const color = iconGradation ? 
             sourceColor.map((sourceCol,idx)=>(sourceCol+rate*(targetColor[idx]-sourceCol))|0) : sourceColor;
           movedData.push(Object.assign({}, otherProps1, otherProps2,
@@ -576,8 +587,8 @@ const App = (props)=>{
         data: pathData,
         coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
         widthUnits:'common',
-        getColor: (x)=>x.color,
-        getWidth: (x)=>x.lineWidth,
+        getColor: (x)=>[100,0,100,100],
+        getWidth: (x)=>0.3,
       })
     }
     return null

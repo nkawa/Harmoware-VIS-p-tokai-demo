@@ -2,20 +2,20 @@
 const mqtt = require("mqtt");  // works under webpack?-> yes!
 
 console.log("Worker start!");
+const client = mqtt.connect("ws://192.168.207.133:1884");
 
 addEventListener('message', e=>{
-    console.log("Worker!",e);
+    console.log("FromMainThread!",e);
     // ここでメインスレッドとの通信を行う！
-
+    client.publish('/wall/display',e.data);
 });
 
 
-console.log("MQTT worker loaded?",mqtt);
+//console.log("MQTT worker loaded?",mqtt);
 
 //const client = mqtt.connect("ws://192.168.50.200:1884");
 //const client = mqtt.connect("ws://broker.emqx.io:8083");
 
-const client = mqtt.connect("ws://192.168.207.133:1884");
 
 client.on('connect', ()=>{
     console.log("MQTT Client Connected");
