@@ -55,6 +55,7 @@ const App = (props)=>{
   const [imgLock, setImgLock] = useState([])
   const [imgOpacity, setImgOpacity] = React.useState([])
   const [videospeed, setVideoSpeed] = useState(1)
+  const [demoMode, setDemoMode] = useState(0)
 
   const { actions, viewport, loading, settime, timeLength, ExtractedData:movedData, movesbase, depotsData } = props;
 
@@ -91,6 +92,35 @@ const App = (props)=>{
       actions.setAnimatePause(false);
     }
   }
+
+  const setMovesLoad = (url)=>{
+
+    actions.setLoading(true);
+    actions.setMovesBase([]);
+    fetch(url)
+     .then((response)=>response.json())
+     .then((readdata) =>{
+        console.log("ReadData",readdata);
+        if (!Array.isArray(readdata)) { // Not Array?
+          const { movesbase } = readdata;
+          if (!movesbase) {
+              actions.setLoading(false);
+              window.alert(i18n.formatError);
+              return;
+          }
+          configLoad(readdata)
+          actions.setMovesBase(readdata);
+        }
+        actions.setAnimatePause(true);
+        actions.setLoading(false);   
+    })
+
+  }
+
+  
+  
+
+
   React.useEffect(()=>{
     const worker = new Worker("worker.js");
     worker.addEventListener("message",(e)=>{
@@ -105,10 +135,37 @@ const App = (props)=>{
           console.log("floor",js)
           if (js.control.value=="start"){
             console.log("VideoPlay!",videoUrl);
-            videoplay();
+              videoplay();
           }else if (js.control.value =="stop"){
               videopause();
               console.log("VideoPause!");
+          }else if (js.control.value =="mode"){
+            // モードは何種類？
+            // 0. ビデオ＋Moves 稼働 
+            // 1. ビデオのみ
+            // 2. 空白のみ
+            // 2. 空白のみ+Moves稼働
+            const nextMode = (demoMode +1)%3
+            setDemoMode(nextMode)
+            console.log("Mode Change",nextMode);
+            switch(nextMode){           // 2. 空白のみ
+              case 0:
+                setVideoUrl("data/sample.mp4");
+//                setMovesBase([]);
+                // 
+                break;
+              case 1:
+                setVideoUrl("data/2023-07-11-noobject.mp4");
+  //              setMovesLoad("data/movesbase.json");
+                break;
+              case 2:
+//                setVideoUrl("data/2023-07-11-noobject.mp4");
+//                setMovesBase([]);
+                break;
+              case 3:
+//                setMovesLoad("data/movesbase.json");
+                break;
+            }
           }
           break;
         case 'PLT':// click x, y
@@ -125,7 +182,7 @@ const App = (props)=>{
       }
     });
   
-  },[videoUrl]);
+  },[videoUrl,demoMode]);
     
 
   React.useEffect(()=>{

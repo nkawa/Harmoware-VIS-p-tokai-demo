@@ -21,12 +21,17 @@ client.on('connect', ()=>{
     console.log("MQTT Client Connected");
     client.subscribe("/controller/left", (err)=>{
         if( !err){
-            console.log("Subscribed!");
+            console.log("Subscribe! left");
+        }
+    })
+    client.subscribe("/controller/right", (err)=>{
+        if( !err){
+            console.log("Subscribe right");
         }
     })
     client.subscribe("/floor/display", (err)=>{
         if( !err){
-            console.log("Subscribed!");
+            console.log("Subscribed! floor");
         }
     })
 });
@@ -39,7 +44,8 @@ client.on('message', (topic,message)=>{
             self.postMessage("FLR "+message.toString());
             break;
         case '/controller/left':
-            self.postMessage("PLT "+message.toString());
+        case '/controller/right':
+                self.postMessage("PLT "+message.toString());
             break;
         default:
             console.log("Worker:",topic.toString(),message.toString());
