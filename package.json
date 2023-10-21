@@ -4,7 +4,7 @@
   "description": "p-tokai-demo",
   "main": "index.js",
   "scripts": {
-    "start": "webpack-cli serve --port 3030 --open --content-base public/ --mode development",
+    "start": "webpack-cli serve --port 3031 --open --content-base public/ --mode development",
     "build": "webpack --mode production"
   },
   "author": "p-tokai-demo",

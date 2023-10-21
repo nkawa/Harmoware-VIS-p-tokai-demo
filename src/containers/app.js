@@ -536,7 +536,23 @@ const App = (props)=>{
           const boxHeight = sourceBoxHeight-(sourceBoxHeight-targetBoxHeight)*rate
 //          console.log("extract2",worker,idx);
           if (worker != undefined){
-            worker.postMessage(idx+","+settime+","+movesbaseidx);
+            const obj = operation[idx]
+            if (obj.type == 0){
+              const jsobj = 
+              {"worker":{"name": obj.name, "image": idx,
+                "x":obj.position[0],
+                "y":obj.position[1],
+               }}
+              worker.postMessage(JSON.stringify(jsobj))
+            }else{
+              const jsobj = 
+              {"item":{"name": obj.name, "image": idx,
+                "x":obj.position[0],
+                "y":obj.position[1],
+               }}
+               worker.postMessage(JSON.stringify(jsobj))
+                            
+            }
           }
           const color = iconGradation ? 
             sourceColor.map((sourceCol,idx)=>(sourceCol+rate*(targetColor[idx]-sourceCol))|0) : sourceColor;
