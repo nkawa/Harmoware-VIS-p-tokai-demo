@@ -185,7 +185,7 @@ const App = (props)=>{
       });
     
     }
-   
+    return ()=>{worker.terminate(); worker=undefined;}
   },[videoUrl,demoMode]);
     
 
