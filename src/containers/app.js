@@ -153,12 +153,12 @@ const App = (props)=>{
               switch(nextMode){           // 2. 空白のみ
                 case 0:
                   setVideoUrl("data/sample.mp4");
-  //                setMovesBase([]);
+                  setMovesBase([]);
                   // 
                   break;
                 case 1:
                   setVideoUrl("data/2023-07-11-noobject.mp4");
-    //              setMovesLoad("data/movesbase.json");
+                 setMovesLoad("data/movesbase.json");
                   break;
                 case 2:
                   setVideoUrl("data/2023-07-13_070200-070930.mp4");
@@ -539,14 +539,14 @@ const App = (props)=>{
             const obj = operation[idx]
             if (obj.type == 0){
               const jsobj = 
-              {"worker":{"name": obj.name, "image": idx,
+              {"worker":{"name": obj.name, "image": obj.id,
                 "x":obj.position[0],
                 "y":obj.position[1],
                }}
               worker.postMessage(JSON.stringify(jsobj))
             }else{
               const jsobj = 
-              {"item":{"name": obj.name, "image": idx,
+              {"item":{"name": obj.name, "image": obj.id,
                 "x":obj.position[0],
                 "y":obj.position[1],
                }}
