@@ -2,20 +2,16 @@
 const mqtt = require("mqtt");  // works under webpack?-> yes!
 
 console.log("Worker start!");
-const client = mqtt.connect("ws://192.168.207.133:1884");
-
-addEventListener('message', e=>{
-    console.log("FromMainThread!",e);
-    // ここでメインスレッドとの通信を行う！
-    client.publish('/wall/display',e.data);
-});
+//const client = mqtt.connect("ws://192.168.207.133:1884");
+const client = mqtt.connect("ws://192.168.50.200:1884");
 
 
-//console.log("MQTT worker loaded?",mqtt);
 
-//const client = mqtt.connect("ws://192.168.50.200:1884");
+console.log("MQTT worker loaded?",mqtt);
+
 //const client = mqtt.connect("ws://broker.emqx.io:8083");
 
+//const client = mqtt.connect("ws://192.168.207.133:1884");
 
 client.on('connect', ()=>{
     console.log("MQTT Client Connected");
@@ -37,7 +33,7 @@ client.on('connect', ()=>{
 });
 
 client.on('message', (topic,message)=>{
-//    console.log("Message",topic.toString(),message.toString());
+// console.log("Message",topic.toString(),message.toString());
     const tpc = topic.toString();
     switch(tpc){
         case '/floor/display':
@@ -55,3 +51,9 @@ client.on('message', (topic,message)=>{
     // ここでメインスレッド側に通知する
 });
 
+
+addEventListener('message', e=>{
+    console.log("FromMainThread!",e);
+    // ここでメインスレッドとの通信を行う！
+    client.publish('/wall/display',e.data);
+});

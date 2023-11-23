@@ -56,7 +56,8 @@ const App = (props)=>{
   const [imgOpacity, setImgOpacity] = React.useState([])
   const [videospeed, setVideoSpeed] = useState(1)
   const [demoMode, setDemoMode] = useState(0)
-  var worker = undefined;
+  const [worker,setWorker] = useState(undefined)
+//  var worker = undefined;
 
   const { actions, viewport, loading, settime, timeLength, ExtractedData:movedData, movesbase, depotsData } = props;
 
@@ -119,14 +120,19 @@ const App = (props)=>{
   }
 
   
-  
-
 
   React.useEffect(()=>{
     if (worker == undefined){
-      worker = new Worker("worker.js");
+      setWorker( new Worker("worker.js"));
+      console.log("Worker initialized!");
+    }},[]);
+
+
+  React.useEffect(()=>{
+    if (worker != undefined){
+      console.log("Worker defined and set eventlistener");
       worker.addEventListener("message",(e)=>{
-        console.log("from Worker",e);
+//        console.log("from Worker",e);
         // ここでメッセージを解釈する
         const cmd = e.data.substring(0,3);
         const msg = e.data.substr(4);
@@ -169,24 +175,33 @@ const App = (props)=>{
                   break;
               }
             }
-            break;
+            break;       
+         
           case 'PLT':// click x, y
-            console.log("depo X,Y:",js.x,js.y);
-            if (js.x >=0 && js.y >=0 && js.x <= 640 && js.y <512){
-              actions.setDepotsBase([
-                // -50,-40 に変換
-                {position:[js.x*100/640-50,40-js.y*80/512,0],color:[0,255,0]}
-              ])
-            }else{
-              actions.setDepotsBase([])
-            }
-            break;
+          console.log("depo X,Y:",js.x,js.y);
+          // Unity XY: -0.76-0.8, Y : -0.93. 0.33
+          var x = 640-(js.x+0.76)*640/1.56
+          var y = (js.y+0.93)*512/1.26
+
+          console.log("depo X,Y:",x,y);
+          if (x >=0 && y >=0 && x <= 640 && y <512){
+            actions.setDepotsBase([
+              // -50,-40 に変換
+              {position:[x*100/640-50,40-y*80/512,0],color:[0,255,0]}
+            ])
+          }else{
+            actions.setDepotsBase([])
+          }
+          break;
         }
       });
-    
     }
-    return ()=>{worker.terminate(); worker=undefined;}
-  },[videoUrl,demoMode]);
+    return ()=>{
+      if (worker != undefined){
+        worker.terminate(); worker=undefined;
+      }
+    }
+  },[worker]);
     
 
   React.useEffect(()=>{
@@ -296,7 +311,7 @@ const App = (props)=>{
         console.log({error})
       })
     }
-  },[])
+  },[worker])
 
   React.useEffect(()=>{
     initProc()
@@ -553,6 +568,8 @@ const App = (props)=>{
                worker.postMessage(JSON.stringify(jsobj))
                             
             }
+          }else{
+            console.log("Worker is undefined!",worker)
           }
           const color = iconGradation ? 
             sourceColor.map((sourceCol,idx)=>(sourceCol+rate*(targetColor[idx]-sourceCol))|0) : sourceColor;
