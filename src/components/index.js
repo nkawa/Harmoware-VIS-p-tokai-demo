@@ -122,7 +122,7 @@ export default class Controller extends React.Component {
 
     const settimeToText= (t)=>{
       // 今回は決め打ちでやろう。
-      const sec = (t * 5)+7*3600+30; // ここに starTime を本当は使うべき
+      const sec = (t * 6)+7*3600+30; // ここに starTime を本当は使うべき
       const h = "0"+(sec/3600|0);
       const m = "0"+((sec-h*3600)/60|0);
       const s = "0"+((sec - h*3600-m*60)|0);
