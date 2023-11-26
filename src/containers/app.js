@@ -119,9 +119,9 @@ const App = (props)=>{
         const dur = videoRef.current.player.duration;
         const cur = videoRef.current.player.currentTime;
 //        const rdiff = vendTime- vstartTime;
-        const rdiff = 26670 // 14:25:00- 07:00:30
-        const utim = 25230 + rdiff*cur/dur;
-          const sec = (utim)+7*3600+30; // ここに starTime を本当は使うべき
+ //       const rdiff = 26670 // 14:25:00- 07:00:30
+        const sec = 7*3600+30 + 26670*cur/dur;
+        // ここに starTime を本当は使うべき
           const h = "0"+(sec/3600|0);
           const m = "0"+((sec-h*3600)/60|0);
           const s = "0"+((sec - h*3600-m*60)|0);
