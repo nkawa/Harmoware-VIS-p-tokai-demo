@@ -212,7 +212,7 @@ const App = (props)=>{
                  if (worker != undefined){
                     const vtime =video_getTime();
                     const jsobj = {
-                        "conttrol": {
+                        "control": {
                           "action": "addTime",
                           "value": vtime
                         }
