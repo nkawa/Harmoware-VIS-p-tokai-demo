@@ -68,7 +68,7 @@ const App = (props)=>{
     if (worker != undefined){
           const jsobj = 
           {
-            "startTime":"2023-07-13 07:00:03",
+            "startTime":"2023-07-13 07:00:30",
             "endTime": "2023-07-13 14:25:00"
           }
           worker.postMessage(JSON.stringify(jsobj))
