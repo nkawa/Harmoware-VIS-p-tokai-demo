@@ -11,12 +11,22 @@ import {OBJLoader} from '@loaders.gl/obj';
 
 registerLoaders([OBJLoader]);
 
+/*
 const INITIAL_VIEW_STATE = {
-  target: [0, 0, 0],
+ target: [0, 0, 0],
   rotationX: 90,
   rotationOrbit: 0,
   zoom: 3.0
 };
+*/
+
+const INITIAL_VIEW_STATE = {
+  target: [32.69, -18.19,0],
+  rotationX: 90,
+  rotationOrbit: 0,
+  zoom: 2.34
+};
+
 
 const App = (props)=>{
   const [now, setNow] = React.useState(new Date())
