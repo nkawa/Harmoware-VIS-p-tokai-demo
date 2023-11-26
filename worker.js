@@ -40,10 +40,21 @@ client.on('message', (topic,message)=>{
             self.postMessage("FLR "+message.toString());
             break;
         case '/controller/left':
-        case '/controller/right':
-                self.postMessage("PLT "+message.toString());
+                self.postMessage("PLL "+message.toString());
             break;
-        default:
+        case '/controller/right':
+                self.postMessage("PLR "+message.toString());
+            break;
+        case '/video/querytime':// マーキング
+                self.postMessage("MRK "+message.toString());
+            break;
+        case '/video/settime': // 時刻設定
+                self.postMessage("VTM "+message.toString());
+            break;
+        case '/video/settime': // 時刻設定
+            self.postMessage("VTM "+message.toString());
+        break;
+    default:
             console.log("Worker:",topic.toString(),message.toString());
 
     }
@@ -53,7 +64,8 @@ client.on('message', (topic,message)=>{
 
 
 addEventListener('message', e=>{
-    console.log("FromMainThread!",e);
+//    console.log("FromMainThread!",e);
     // ここでメインスレッドとの通信を行う！
+    // wall display だけじゃないはずだけど。。
     client.publish('/wall/display',e.data);
 });

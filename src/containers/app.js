@@ -57,6 +57,8 @@ const App = (props)=>{
   const [videospeed, setVideoSpeed] = useState(1)
   const [demoMode, setDemoMode] = useState(0)
   const [worker,setWorker] = useState(undefined)
+  const [lmarker, setLmarker] = useState(undefined)
+  const [rmarker, setRmarker] = useState(undefined)
 //  var worker = undefined;
 
   const { actions, viewport, loading, settime, timeLength, ExtractedData:movedData, movesbase, depotsData } = props;
@@ -144,6 +146,16 @@ const App = (props)=>{
     }},[]);
 
 
+  // 2つの depot marker のどちらかが生きてるか。
+  React.useEffect(()=>{
+    const markers = [];
+    if (lmarker != undefined) markers.push(lmarker);
+    if (rmarker != undefined) markers.push(rmarker);
+    actions.setDepotsBase(markers);
+  },[lmarker,rmarker]);
+
+  
+
   React.useEffect(()=>{
     if (worker != undefined){
       console.log("Worker defined and set eventlistener");
@@ -152,17 +164,17 @@ const App = (props)=>{
         // ここでメッセージを解釈する
         const cmd = e.data.substring(0,3);
         const msg = e.data.substr(4);
-        console.log(msg);
+//        console.log(msg);
         const js = JSON.parse(msg);
         switch(cmd){
           case 'FLR':
             console.log("floor",js)
             if (js.control.value=="start"){
-              console.log("VideoPlay!",videoUrl);
+//              console.log("VideoPlay!",videoUrl);
                 videoplay();
             }else if (js.control.value =="stop"){
                 videopause();
-                console.log("VideoPause!");
+//                console.log("VideoPause!");
             }else if (js.control.value =="mode"){
               // モードは何種類？
               // 0. ビデオ＋Moves 稼働 
@@ -193,22 +205,40 @@ const App = (props)=>{
             }
             break;       
          
-          case 'PLT':// click x, y
-          console.log("depo X,Y:",js.x,js.y);
+          case 'PLL':// click x, y
           // Unity XY: -0.76-0.8, Y : -0.93. 0.33
-          var x = 640-(js.x+0.76)*640/1.56
-          var y = (js.y+0.93)*512/1.26
+            var x = 640-(js.x+0.76)*640/1.56;
+            var y = (js.y+0.93)*512/1.26;
+            if (js.x == 0 && js.y ==0){
+              setLmarker(undefined);
+            }else if (x >=0 && y >=0 && x <= 640 && y <512){
+              setLmarker({position:[x*100/640-50,40-y*80/512,0],color:[0,255,0]})
+            }else{
+              setLmarker(undefined);
+            } 
+            break;
+          case 'PLR':// click x, y
+              var x = 640-(js.x+0.76)*640/1.56
+              var y = (js.y+0.93)*512/1.26
+              if (js.x == 0 && js.y ==0){
+                setRmarker(undefined);
+              }else if (x >=0 && y >=0 && x <= 640 && y <512){
+                setRmarker({position:[x*100/640-50,40-y*80/512,0],color:[0,200,200]})
+              }else{
+                setRmarker(undefined);
+              } 
+                break;
+          case 'MRK': // 特定の時刻でマーキングしたい！
+            // 現在のビデオの位置をマーキング
+            if(videoRef.current && videoRef.current.player){
+              var ct = videoRef.current.player.currentTime;
+              if (worker != undefined){
+                const jsobj = {"currentTime": ct}
+                worker.postMessage(JSON.stringify(jsobj))
+              } 
+            }
+            break;
 
-          console.log("depo X,Y:",x,y);
-          if (x >=0 && y >=0 && x <= 640 && y <512){
-            actions.setDepotsBase([
-              // -50,-40 に変換
-              {position:[x*100/640-50,40-y*80/512,0],color:[0,255,0]}
-            ])
-          }else{
-            actions.setDepotsBase([])
-          }
-          break;
         }
       });
     }
