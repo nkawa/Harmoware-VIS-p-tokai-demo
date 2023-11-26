@@ -113,10 +113,21 @@ export default class Controller extends React.Component {
     this.props.setImgdispMode(value)
   }
 
+
+
   render() {
-    const {setImgList, getOutputData, imgIdIdx, srclist, viewState, settime, timeLength, configLoad, videospeed,
+    const {setImgList, getOutputData, imgIdIdx, srclist, viewState, settime, timeLength, textTime, configLoad, videospeed,
       videoplay, videopause, videorestart, vSzRate, vShiftX, vShiftY, videoUrl, setVideoUrl, actions, inputFileName } = this.props
     const { movesFileName } = inputFileName;
+
+    const settimeToText= (t)=>{
+      // 今回は決め打ちでやろう。
+      const sec = (t * 5)+7*3600+30; // ここに starTime を本当は使うべき
+      const h = "0"+(sec/3600|0);
+      const m = "0"+((sec-h*3600)/60|0);
+      const s = "0"+((sec - h*3600-m*60)|0);
+      return h.slice(-2)+":"+m.slice(-2)+":"+s.slice(-2)
+    }
     return (
         <div className="harmovis_controller" ref={this.divRef} >
             <ul className="flex_list">
@@ -165,8 +176,9 @@ export default class Controller extends React.Component {
                 className="harmovis_input_range" id="currentTime" />
             </li>
             <li className="flex_row">
-              <input type="number" value={settime} min={0} max={timeLength} step={0.2} onChange={this.videoSetTime.bind(this)}
-                className="harmovis_input_number" id="currentTime" />{` / ${timeLength}`}
+{/*              <input type="number" value={settime} min={0} max={timeLength} step={0.2} onChange={this.videoSetTime.bind(this)}
+                className="harmovis_input_number" id="currentTime" />*/ }
+                {`2023/07/13  ${settimeToText(settime)}`}
             </li>
             <li className="flex_row">
               <label htmlFor="speed">{`speed:`}</label>
