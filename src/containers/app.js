@@ -61,11 +61,27 @@ const App = (props)=>{
 
   const { actions, viewport, loading, settime, timeLength, ExtractedData:movedData, movesbase, depotsData } = props;
 
+  const send_timeinfo = () =>{
+        // ここで、MQTT にビデオの長さと時刻を送るべき
+        // ビデオの長さ（実際の）：タイムスタンプとは関係ない。videoRef.current.player.duration
+        //　今回は固定で、スタート時間は　7:00:30 , 終了は 14:25:00 とする。（大人都合？）
+    if (worker != undefined){
+          const jsobj = 
+          {
+            "starttime":"2023-07-13 07:00:03",
+            "endtime": "2023-07-13 14:25:00"
+          }
+          worker.postMessage(JSON.stringify(jsobj))
+    }
+
+  }
 
   
   const videoplay = ()=>{
     if(videoUrl){
       if(videoRef.current && videoRef.current.player){
+        send_timeinfo();
+
         videoRef.current.player.play()
       }
     }else
@@ -307,6 +323,7 @@ const App = (props)=>{
         actions.setTimeBegin(0)
         actions.setTimeLength(videoRef.current.player.duration)
       })
+      send_timeinfo()
       videoRef.current.player.on("error",(error)=>{
         console.log({error})
       })
