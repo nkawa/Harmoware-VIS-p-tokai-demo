@@ -114,8 +114,9 @@ const App = (props)=>{
         return dt.toISOString();
       }      
     }
-
+    return undefined;
   }
+
   const videoplay = ()=>{
     if(videoUrl){
       if(videoRef.current && videoRef.current.player){
@@ -634,13 +635,21 @@ const App = (props)=>{
       if(timeLength > 0 && departuretime <= settime && settime < arrivaltime){
         const nextidx = operation.findIndex((data)=>data.elapsedtime > settime);
         const idx = (nextidx-1)|0;
+        // 副作用として現在時刻を送信
+        if (worker != undefined){
+          const vtime =video_getTime();
+          const jsobj = {
+              "currentTime": vtime
+          };
+          worker.postMessage("W"+JSON.stringify(jsobj));
+        }
+
         if(operation[idx].position === undefined || operation[nextidx].position === undefined){
           const {elapsedtime, ...otherProps2} = operation[idx];
           movedData.push(Object.assign({},
             otherProps1, otherProps2, { settime, movesbaseidx },
           ));
-          // ここで、MQTT メッセージ？
-          console.log("extract",worker,idx);
+//          console.log("extract",worker,idx);
 
         }else{
           const { elapsedtime, position:sourcePosition,
