@@ -45,14 +45,14 @@ client.on('message', (topic,message)=>{
         case '/controller/right':
                 self.postMessage("PLR "+message.toString());
             break;
+/*     
         case '/video/querytime':// マーキング
                 self.postMessage("MRK "+message.toString());
             break;
         case '/video/settime': // 時刻設定
                 self.postMessage("VTM "+message.toString());
             break;
-        case '/video/settime': // 時刻設定
-            self.postMessage("VTM "+message.toString());
+*/
         break;
     default:
             console.log("Worker:",topic.toString(),message.toString());
@@ -67,5 +67,14 @@ addEventListener('message', e=>{
 //    console.log("FromMainThread!",e);
     // ここでメインスレッドとの通信を行う！
     // wall display だけじゃないはずだけど。。
-    client.publish('/wall/display',e.data);
+    const tgt = e.data.substring(0,1);
+    const msg = e.data.substr(1);
+    switch(tgt){
+        case 'W':
+            client.publish('/wall/display',msg);
+            break;
+        case 'T':
+            client.publish('/controller/tablet',msg);
+            break;
+    }
 });

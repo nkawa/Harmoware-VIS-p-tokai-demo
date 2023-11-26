@@ -56,12 +56,18 @@ const App = (props)=>{
   const [imgOpacity, setImgOpacity] = React.useState([])
   const [videospeed, setVideoSpeed] = useState(1)
   const [demoMode, setDemoMode] = useState(0)
-  const [worker,setWorker] = useState(undefined)
-  const [lmarker, setLmarker] = useState(undefined)
-  const [rmarker, setRmarker] = useState(undefined)
-//  var worker = undefined;
+  const [worker,setWorker] = useState(undefined)    // WebWorker (MQTT 通信用)
+  const [lmarker, setLmarker] = useState(undefined) // 左マーカー位置
+  const [rmarker, setRmarker] = useState(undefined) // 右マーカー位置
+
+  const [vstartTime, setVstarttime] = useState(0) // ビデオ開始秒 (h*3600+m*60+s)
+  const [vendTime, setVendtime] = useState(0)     // ビデオ終了秒 
 
   const { actions, viewport, loading, settime, timeLength, ExtractedData:movedData, movesbase, depotsData } = props;
+
+
+  // ビデオの時刻と実時刻との対応を行う必要がある
+  // 本来は設定ファイルで作るべき。今回は面倒なのでやらない
 
   const send_timeinfo = () =>{
         // ここで、MQTT にビデオの長さと時刻を送るべき
@@ -73,12 +79,43 @@ const App = (props)=>{
             "startTime":"2023-07-13 07:00:30",
             "endTime": "2023-07-13 14:25:00"
           }
-          worker.postMessage(JSON.stringify(jsobj))
+          const st = new Date("2023-07-13 07:00:30"); // UTC?? どうする？
+          const ed = new Date("2023-07-13 14:25:00"); // UTC?? どうする？
+
+          setVstarttime(st.getTime());
+          setVendtime(ed.getTime());
+          worker.postMessage("W"+JSON.stringify(jsobj))
     }
 
   }
 
-  
+  // MQTT で指示された時刻に設定
+  const video_MQTT_SetTime = (timeStr)=>{
+      const d = Date.parse(timeStr);
+      const diff = d.getTime()-vstartTime; 
+      const rdiff = vendTime- vstartTime;
+      if(videoUrl){
+        if(videoRef.current && videoRef.current.player){
+          const dur = videoRef.current.player.duration;
+          const setTm = dur *diff / rdiff;
+          videoRef.current.player.currentTime = setTm;
+        }      
+      }
+  }
+
+  const video_getTime =()=>{
+    if(videoUrl){
+      if(videoRef.current && videoRef.current.player){
+        const dur = videoRef.current.player.duration;
+        const cur = videoRef.current.player.currentTime;
+        const rdiff = vendTime- vstartTime;
+        const utim = vstartTime + rdiff*cur/dur;
+        const dt = new Date(utim);
+        return dt.toISOString();
+      }      
+    }
+
+  }
   const videoplay = ()=>{
     if(videoUrl){
       if(videoRef.current && videoRef.current.player){
@@ -137,8 +174,6 @@ const App = (props)=>{
 
   }
 
-  
-
   React.useEffect(()=>{
     if (worker == undefined){
       setWorker( new Worker("worker.js"));
@@ -146,7 +181,7 @@ const App = (props)=>{
     }},[]);
 
 
-  // 2つの depot marker のどちらかが生きてるか。
+  // 2つの depot marker (3D marker from MQTT) のどちらかが生きてるか。
   React.useEffect(()=>{
     const markers = [];
     if (lmarker != undefined) markers.push(lmarker);
@@ -154,7 +189,6 @@ const App = (props)=>{
     actions.setDepotsBase(markers);
   },[lmarker,rmarker]);
 
-  
 
   React.useEffect(()=>{
     if (worker != undefined){
@@ -169,7 +203,23 @@ const App = (props)=>{
         switch(cmd){
           case 'FLR':
             console.log("floor",js)
-            if (js.control.value=="start"){
+            if (js.control.action =="setTime"){
+              // video settime
+                video_MQTT_SetTime(js.control.value);
+            }else if (js.control.action =="getTime"){
+              if(videoRef.current && videoRef.current.player){
+                 if (worker != undefined){
+                    const vtime =video_getTime();
+                    const jsobj = {
+                        "conttrol": {
+                          "action": "addTime",
+                          "value": vtime
+                        }
+                    };
+                    worker.postMessage("T"+JSON.stringify(jsobj));
+                  }
+              } 
+            }else if (js.control.value=="start"){
 //              console.log("VideoPlay!",videoUrl);
                 videoplay();
             }else if (js.control.value =="stop"){
@@ -187,7 +237,8 @@ const App = (props)=>{
               switch(nextMode){           // 2. 空白のみ
                 case 0:
                   setVideoUrl("data/sample.mp4");
-                  setMovesBase([]);
+                  setMovesLoad("data/analysis.json");
+//                  setMovesBase([]);
                   // 
                   break;
                 case 1:
@@ -223,18 +274,24 @@ const App = (props)=>{
               if (js.x == 0 && js.y ==0){
                 setRmarker(undefined);
               }else if (x >=0 && y >=0 && x <= 640 && y <512){
-                setRmarker({position:[x*100/640-50,40-y*80/512,0],color:[0,200,200]})
+                setRmarker({position:[x*100/640-50,40-y*80/512,0],color:[255,0,200]})
               }else{
                 setRmarker(undefined);
               } 
-                break;
+              break;
           case 'MRK': // 特定の時刻でマーキングしたい！
             // 現在のビデオの位置をマーキング
             if(videoRef.current && videoRef.current.player){
-              var ct = videoRef.current.player.currentTime;
+//              var ct = videoRef.current.player.currentTime;
               if (worker != undefined){
-                const jsobj = {"currentTime": ct}
-                worker.postMessage(JSON.stringify(jsobj))
+                const vtime =getVideoStrTime();
+                const jsobj = {
+                  "conttrol": {
+                    "action": "addTime",
+                    "value": vtime
+                  }
+                };
+                worker.postMessage("T"+JSON.stringify(jsobj));
               } 
             }
             break;
@@ -605,14 +662,14 @@ const App = (props)=>{
                 "x":obj.position[0],
                 "y":obj.position[1],
                }}
-              worker.postMessage(JSON.stringify(jsobj))
+              worker.postMessage("W"+JSON.stringify(jsobj))
             }else{
               const jsobj = 
               {"item":{"name": obj.name, "image": obj.id,
                 "x":obj.position[0],
                 "y":obj.position[1],
                }}
-               worker.postMessage(JSON.stringify(jsobj))
+               worker.postMessage("W"+JSON.stringify(jsobj))
                             
             }
           }else{
