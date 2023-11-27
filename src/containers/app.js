@@ -227,9 +227,18 @@ const App = (props)=>{
         switch(cmd){
           case 'FLR':
             console.log("floor",js)
+
             if (js.control.action =="setTime"){
               // video settime
                 video_MQTT_SetTime(js.control.value);
+            }else if (js.control.action == "prevTime"){
+              const cur = videoRef.current.player.currentTime;
+              actions.setTime(videoRef.current.player.currentTime-parseInt(js.control.value))                
+            }else if (js.control.action == "forwardTime"){
+              const cur = videoRef.current.player.currentTime;
+              actions.setTime(videoRef.current.player.currentTime+parseInt(js.control.value))                
+                
+            
             }else if (js.control.action =="getTime"){
               if(videoRef.current && videoRef.current.player){
                  if (worker != undefined){
@@ -249,7 +258,7 @@ const App = (props)=>{
             }else if (js.control.value =="stop"){
                 videopause();
 //                console.log("VideoPause!");
-            }else if (js.control.value =="mode"){
+            }else if (js.control.value =="mode__"){ // モードはやめておく
               // モードは何種類？
               // 0. ビデオ＋Moves 稼働 
               // 1. ビデオのみ
@@ -693,6 +702,8 @@ const App = (props)=>{
               {"worker":{"name": obj.name, "image": obj.id,
                 "x":obj.position[0],
                 "y":obj.position[1],
+                "dist":obj.dist,
+                "time":obj.worksec,
                }}
               worker.postMessage("W"+JSON.stringify(jsobj))
             }else{
