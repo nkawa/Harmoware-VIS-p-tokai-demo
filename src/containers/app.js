@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import DeckGL from '@deck.gl/react';
 import { LineLayer, PathLayer, COORDINATE_SYSTEM, OrbitView, BitmapLayer, SimpleMeshLayer } from 'deck.gl';
 import {
@@ -71,6 +71,12 @@ const App = (props)=>{
   const [rmarker, setRmarker] = useState(undefined) // 右マーカー位置
 
   const [vstartTime, setVstarttime] = useState(0) // ビデオ開始秒 (h*3600+m*60+s)
+  const vStartTimeRef = useRef(vstartTime);
+
+  useEffect(() => {
+    vStartTimeRef.current = vstartTime;
+  }, [vstartTime]);
+
   const [vendTime, setVendtime] = useState(0)     // ビデオ終了秒 
 
   const { actions, viewport, loading, settime, timeLength, ExtractedData:movedData, movesbase, depotsData } = props;
@@ -120,7 +126,9 @@ const App = (props)=>{
         const cur = videoRef.current.player.currentTime;
 //        const rdiff = vendTime- vstartTime;
  //       const rdiff = 26670 // 14:25:00- 07:00:30
-        const sec = 7*3600+30 + 26670*cur/dur;
+        const sec = 26670*cur/dur;
+        const currentTime = new Date(vStartTimeRef.current + (sec*1000));
+        return currentTime;
         // ここに starTime を本当は使うべき
           const h = "0"+(sec/3600|0);
           const m = "0"+((sec-h*3600)/60|0);
@@ -242,7 +250,7 @@ const App = (props)=>{
             }else if (js.control.action =="getTime"){
               if(videoRef.current && videoRef.current.player){
                  if (worker != undefined){
-                    const vtime =video_getTime();
+                    const vtime =video_getTime().toDateString();
                     const jsobj = {
                         "control": {
                           "action": "addTime",
@@ -669,7 +677,8 @@ const App = (props)=>{
         const idx = (nextidx-1)|0;
         // 副作用として現在時刻を送信
         if (worker != undefined){
-          const vtime =video_getTime();
+          const vtime =video_getTime().toDateString();
+          console.log(vtime);
           const jsobj = {
               "currentTime": vtime
           };
