@@ -677,7 +677,7 @@ const App = (props)=>{
         const idx = (nextidx-1)|0;
         // 副作用として現在時刻を送信
         if (worker != undefined){
-          const vtime =video_getTime().toDateString();
+          const vtime =video_getTime().toISOString();
           console.log(vtime);
           const jsobj = {
               "currentTime": vtime
