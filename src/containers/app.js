@@ -697,7 +697,7 @@ const App = (props)=>{
 //          console.log("extract2",worker,idx);
           if (worker != undefined){
             const obj = operation[idx]
-            if (obj.type == 0){
+            if (obj.type == 0 || !obj.name.startsWith('item')){
               const jsobj = 
               {"worker":{"name": obj.name, "image": obj.id,
                 "x":obj.position[0],
